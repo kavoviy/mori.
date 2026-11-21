@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d0f">
+  <meta name="description" content="Mori — лёгкие заметки и закладки. Красивые карточки, Markdown и синхронизация.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="mori">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>mori — твои заметки</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="mori — главная">
+        <span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>mori<span class="brand-dot">.</span></span>
+      </a>
+      <div class="topbar-right">
+        <button id="syncButton" class="sync-chip" type="button" title="Синхронизировать заметки"><span id="syncDot" class="status-dot offline"></span><span id="syncText">Локально</span></button>
+        <button id="menuButton" class="icon-button desktop-icon" type="button" title="Импорт и экспорт" aria-label="Импорт и экспорт">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <section class="intro">
+        <div class="intro-copy">
+          <span class="eyebrow"><span class="eyebrow-line"></span> ТВОЁ ЛИЧНОЕ ПРОСТРАНСТВО</span>
+          <h1>Мысли, которые <span>стоит сохранить.</span></h1>
+          <p>Заметки, идеи и любимые места в интернете — всё под рукой.</p>
+        </div>
+        <div class="intro-decoration" aria-hidden="true">
+          <span class="decoration-orbit decoration-one"></span><span class="decoration-orbit decoration-two"></span><span class="decoration-inner">✳</span>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="workspace-top">
+          <div class="section-title"><h2>Моя коллекция</h2><span id="noteCount" class="count-pill">0</span></div>
+          <div class="actions">
+            <button class="button-secondary desktop-button" id="addBookmarkButton" type="button">
+              <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2.1-2.1a5 5 0 0 0-7.1-7.1l-1.2 1.2M14 11a5 5 0 0 0-7.1 0l-2.1 2.1a5 5 0 0 0 7.1 7.1l1.2-1.2"/></svg>
+              Закладка
+            </button>
+            <button class="button-primary desktop-button" id="addNoteButton" type="button">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Новая заметка
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-field">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input id="searchInput" type="search" placeholder="Найти что-нибудь..." autocomplete="off" aria-label="Поиск заметок">
+            <kbd class="search-hotkey">⌘ K</kbd>
+          </div>
+          <nav class="filter-tabs" aria-label="Фильтры">
+            <button class="filter-tab active" data-filter="all" type="button">Все <span id="allCount"></span></button>
+            <button class="filter-tab" data-filter="pinned" type="button"><svg viewBox="0 0 24 24"><path d="m16 3 5 5-3 1-4 4-1 5-2 2-2-7-5-2 2-2 5-1 4-4zM4 20l6-6"/></svg> Закреплённые</button>
+            <button class="filter-tab" data-filter="bookmark" type="button"><svg viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4z"/></svg> Ссылки</button>
+          </nav>
+        </div>
+
+        <div id="collectionArea" aria-live="polite"></div>
+      </section>
+      <footer class="footer"><span>mori. <span class="footer-heart">✳</span> пространство для твоих идей</span><span>Остаётся твоим. Работает офлайн.</span></footer>
+    </main>
+  </div>
+
+  <div class="fab-wrap">
+    <button class="fab-secondary" id="mobileBookmark" title="Создать закладку" aria-label="Создать закладку"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2.1-2.1a5 5 0 0 0-7.1-7.1l-1.2 1.2M14 11a5 5 0 0 0-7.1 0l-2.1 2.1a5 5 0 0 0 7.1 7.1l1.2-1.2"/></svg></button>
+    <button class="fab" id="mobileNew" title="Создать заметку" aria-label="Создать заметку"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+
+  <dialog id="editorDialog" class="editor-dialog" aria-label="Редактор заметки">
+    <div class="editor-shell">
+      <header class="editor-topbar">
+        <div class="editor-topbar-left">
+          <button id="closeEditorButton" class="icon-button" title="Закрыть" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span id="editorTypeLabel" class="editor-type-label">Заметка</span>
+          <span id="saveIndicator" class="saved-label">Сохранено</span>
+        </div>
+        <div class="editor-topbar-right">
+          <button id="editorPinButton" class="icon-button" title="Закрепить" aria-label="Закрепить"><svg viewBox="0 0 24 24"><path d="m16 3 5 5-3 1-4 4-1 5-2 2-2-7-5-2 2-2 5-1 4-4zM4 20l6-6"/></svg></button>
+          <div class="color-menu-wrap">
+            <button id="colorButton" class="icon-button" title="Цвет карточки" aria-label="Цвет карточки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="8" cy="14" r="1"/><path d="M15 16a2 2 0 0 0 0-4"/></svg></button>
+            <div id="colorPopover" class="color-popover hidden" role="group" aria-label="Цвет карточки"></div>
+          </div>
+          <button id="exportNoteButton" class="icon-button" title="Скачать Markdown" aria-label="Скачать Markdown"><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 17v3h14v-3"/></svg></button>
+          <button id="deleteNoteButton" class="icon-button danger-hover" title="Удалить заметку" aria-label="Удалить заметку"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg></button>
+        </div>
+      </header>
+      <div class="editor-content">
+        <input id="noteTitleInput" class="note-title-input" maxlength="180" placeholder="Без названия" aria-label="Название заметки">
+        <div id="bookmarkControls" class="bookmark-controls hidden">
+          <label class="field-label" for="bookmarkUrlInput">ССЫЛКА НА САЙТ</label>
+          <div class="bookmark-url-row"><input id="bookmarkUrlInput" type="url" inputmode="url" placeholder="https://example.com"><a id="openBookmarkButton" class="open-site-button" target="_blank" rel="noopener noreferrer" href="#" title="Открыть сайт"><svg viewBox="0 0 24 24"><path d="M13 5h6v6M19 5l-9 9M19 13v6H5V5h6"/></svg></a></div>
+          <div class="bookmark-details"><input id="bookmarkImageInput" type="url" inputmode="url" placeholder="URL картинки (необязательно)"><button id="autoPreviewButton" class="subtle-button" type="button">Найти обложку <svg viewBox="0 0 24 24"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7z"/></svg></button></div>
+          <div id="bookmarkImagePreview" class="bookmark-image-preview hidden"></div>
+        </div>
+        <div class="edit-mode-bar"><span class="field-label">СОДЕРЖИМОЕ <span class="markdown-tag">MARKDOWN</span></span><div class="mode-toggle"><button id="editModeButton" class="active" type="button">Редактировать</button><button id="previewModeButton" type="button">Просмотр</button></div></div>
+        <textarea id="noteBodyInput" class="note-body-input" placeholder="Начни писать...&#10;&#10;Поддерживается **Markdown**, списки и ссылки." spellcheck="true" aria-label="Текст заметки"></textarea>
+        <div id="markdownPreview" class="markdown-preview hidden" tabindex="0"></div>
+      </div>
+      <footer class="editor-footer"><span id="characterCount">0 символов</span><span>Автосохранение · <span id="editDate">только что</span></span></footer>
+    </div>
+  </dialog>
+
+  <dialog id="accountDialog" class="small-dialog" aria-label="Синхронизация GitHub Gist">
+    <div class="small-dialog-content sync-dialog-content">
+      <div class="dialog-header"><div><span class="eyebrow"><span class="eyebrow-line"></span> GITHUB GIST · БЕСПЛАТНО</span><h2>Одна кнопка. Все заметки.</h2></div><button class="icon-button" id="closeAccount" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div>
+      <p class="dialog-description">Данные хранятся у тебя на устройстве. Кнопка «Синхронизировать» объединяет заметки с зашифрованной копией в GitHub Gist.</p>
+      <div class="sync-instructions"><span class="sync-step">1</span><span>Создай <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer">GitHub Token (classic) ↗</a>. Назови <b>mori sync</b>, отметь <b>только gist</b> и нажми Generate token.</span></div>
+      <div class="sync-instructions"><span class="sync-step">2</span><span>Вставь токен ниже и придумай <b>отдельный пароль шифрования</b> (12+ символов). Не потеряй его — без него облако не расшифровать.</span></div>
+      <div class="sync-instructions"><span class="sync-step">3</span><span>На iPhone вставь <b>тот же токен и пароль</b>. Архив обнаружится автоматически. Дальше — одна кнопка.</span></div>
+      <div class="auth-form" id="gistForm">
+        <label for="gistToken">GitHub-токен <span class="muted-label">(сохранится только на этом устройстве)</span></label>
+        <div class="field-with-action"><input id="gistToken" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ghp_…"/><button id="revealToken" type="button" class="field-icon" aria-label="Показать токен">Показать</button></div>
+        <label for="gistPassphrase">Пароль для шифрования <span class="muted-label">(не передаётся GitHub)</span></label>
+        <div class="field-with-action"><input id="gistPassphrase" type="password" autocomplete="off" spellcheck="false" placeholder="12+ символов · запомни его"/><button id="revealPassphrase" type="button" class="field-icon" aria-label="Показать пароль">Показать</button></div>
+        <p id="gistError" class="form-error hidden" role="alert"></p>
+        <button id="gistSyncNow" class="button-primary full-width" type="button">↻ Синхронизировать</button>
+        <div class="sync-secondary-row"><button id="gistDisconnect" class="subtle-button" type="button">Забыть токен на устройстве</button><span id="gistInfo" class="sync-info">Ещё не подключено</span></div>
+      </div>
+      <p class="privacy-hint">Секретный Gist <strong>не является приватным</strong>. Поэтому mori. шифрует содержимое AES-256-GCM. Токен хранится локально и не попадает в репозиторий. Не вводи токен в чужих копиях сайта.</p>
+    </div>
+  </dialog>
+
+  <dialog id="menuDialog" class="small-dialog" aria-label="Импорт и экспорт">
+    <div class="small-dialog-content">
+      <div class="dialog-header"><div><span class="eyebrow"><span class="eyebrow-line"></span> ИНСТРУМЕНТЫ</span><h2>Импорт и копии.</h2></div><button class="icon-button" id="closeMenu" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div>
+      <p class="dialog-description">Сохраняй свои записи независимо от облака. Файлы Markdown можно открыть в любом текстовом редакторе.</p>
+      <div class="menu-actions"><button class="menu-action" id="importMarkdownButton"><svg viewBox="0 0 24 24"><path d="M12 16V4m-4 4 4-4 4 4M4 17v3h16v-3"/></svg><span><strong>Импортировать .md</strong><small>Один или несколько Markdown-файлов</small></span></button><button class="menu-action" id="exportBackupButton"><svg viewBox="0 0 24 24"><path d="M12 4v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg><span><strong>Скачать резервную копию</strong><small>Все заметки одним файлом .json</small></span></button><button class="menu-action" id="importBackupButton"><svg viewBox="0 0 24 24"><path d="M12 16V4m-4 4 4-4 4 4M4 17v3h16v-3"/></svg><span><strong>Восстановить копию</strong><small>Загрузить ранее сохранённый .json</small></span></button></div>
+      <p class="privacy-hint">Даже с GitHub Gist регулярно скачивай резервную копию: облако не заменяет бэкап. Не публикуй личные копии в GitHub.</p>
+    </div>
+  </dialog>
+
+  <input type="file" id="markdownFileInput" accept=".md,.markdown,text/markdown,text/plain" multiple hidden>
+  <input type="file" id="backupFileInput" accept=".json,application/json" hidden>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
